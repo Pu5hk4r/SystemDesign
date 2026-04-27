@@ -7,7 +7,7 @@ BASE-- every model(table) inherit it
 COMMANDS
 psql -U postgres
 <Sql> query
-\l list database
+\ l list database
 \q  quit
 netstat -ano | findstr : 5432  port conflict
 # Kaun use kar raha hai port ko
@@ -35,7 +35,8 @@ Engine = database permanent connection
 Session = ek request ka temporary connection — kaam karo, band karo.
 '''
 
-engine = create_engine(autocommit = False, autoflush = False, bind = engine)
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 #Dependency Injection

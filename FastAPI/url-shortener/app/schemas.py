@@ -31,7 +31,7 @@ already valid hai, strict validation ki zaroorat nahi.
 #HttpUrl — automatically validate karta hai ki valid URL hai ya nahi. Koi random string nahi chalegi.
 
 from pydantic import BaseModel, HttpUrl
-from datetime import daytime
+from datetime import datetime
 
 #User se input lega -- sirf original URL
 
