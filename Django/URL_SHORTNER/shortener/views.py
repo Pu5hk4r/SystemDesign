@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404, redirect
 from .models import URL
-from .serializers import URLCreateSerializer,  URLResposneSerializer
+from .serializers import URLCreateSerializer, URLResponseSerializer
 
 class ShortenURL(APIView):
     def post(self, request):
@@ -16,12 +16,12 @@ class ShortenURL(APIView):
 class RedirectURL(APIView):
     def get(self, request, short_code):
         url = get_object_or_404(URL, short_code=short_code, is_active=True)
-        url.click_count += 1
+        url.clicks += 1
         url.save()
-        return redirect(url.long_url)
+        return redirect(url.original_url)
 
 class URLStats(APIView):
     def get(self, request, short_code):
         url = get_object_or_404(URL, short_code=short_code)
-        serializer = URLResposneSerializer(url)
+        serializer = URLResponseSerializer(url)
         return Response(serializer.data)
