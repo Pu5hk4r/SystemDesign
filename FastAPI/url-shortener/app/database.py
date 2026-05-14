@@ -25,19 +25,34 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm  import  sessionmaker
 from dotenv import load_dotenv
 import os
+import redis
+import logging
 
 load_dotenv()  #take things from env
 
 DATABASE_URL = os.getenv("DATABASE_URL")
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+
+logger = logging.getLogger(__name__)
 
 '''
 Engine = database permanent connection
 Session = ek request ka temporary connection — kaam karo, band karo.
+Redis = in-memory cache for fast access aur rate limiting
 '''
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+
+# Redis connection pool for efficiency
+try:
+    redis_client = redis.from_url(REDIS_URL, decode_responses=True)
+    redis_client.ping()
+    logger.info("✓ Redis connected successfully")
+except Exception as e:
+    logger.warning(f"⚠ Redis connection failed: {e}")
+    redis_client = None
 
 #Dependency Injection
 def get_db():
@@ -46,3 +61,7 @@ def get_db():
         yield db
     finally:
         db.close()
+
+def get_redis():
+    """Get Redis client - returns None if not connected"""
+    return redis_client

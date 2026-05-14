@@ -30,23 +30,72 @@ already valid hai, strict validation ki zaroorat nahi.
 '''
 #HttpUrl — automatically validate karta hai ki valid URL hai ya nahi. Koi random string nahi chalegi.
 
-from pydantic import BaseModel, HttpUrl
-from datetime import datetime
+from pydantic import BaseModel, HttpUrl, Field
+from datetime import datetime, timedelta
+from typing import Optional, Dict, Any
 
-#User se input lega -- sirf original URL
+#User se input lega -- sirf original URL aur optional expiry/custom code
 
 class URLCreate(BaseModel):
-    original_url : HttpUrl
+    original_url: HttpUrl
+    custom_code: Optional[str] = Field(None, min_length=3, max_length=20, description="Custom short code")
+    expires_in_days: Optional[int] = Field(None, ge=1, le=365, description="URL expiry in days (1-365)")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "original_url": "https://www.example.com/very/long/url",
+                "custom_code": "myurl",
+                "expires_in_days": 30
+            }
+        }
+
 
 # User ko response denge -- saari details
 
 class URLResponse(BaseModel):
-    id : int
-    original_url : str
-    short_code : str
-    clicks : int
-    is_active : bool
-    created_at : datetime
+    id: int
+    original_url: str
+    short_code: str
+    custom_code: Optional[str]
+    clicks: int
+    is_active: bool
+    expires_at: Optional[datetime]
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+class AnalyticsData(BaseModel):
+    """Analytics summary for a short URL"""
+    url_id: int
+    short_code: str
+    total_clicks: int
+    unique_visitors: int
+    click_distribution: Dict[str, int]  # hourly or daily breakdown
+    top_referrers: Dict[str, int]
+    device_breakdown: Dict[str, int]
+    created_at: datetime
+    last_accessed: Optional[datetime]
+    
+    class Config:
+        from_attributes = True
+
+
+class URLStats(BaseModel):
+    """Detailed stats for a URL"""
+    url: URLResponse
+    analytics: AnalyticsData
+
+
+class BulkURLResponse(BaseModel):
+    """Response for bulk URL creation"""
+    total: int
+    successful: int
+    failed: int
+    urls: list[URLResponse]
 
     class Config:
         from_attributes = True
